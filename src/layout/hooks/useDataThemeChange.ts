@@ -6,14 +6,9 @@ import { routerArrays } from "@/layout/types";
 import { router, resetRouter } from "@/router";
 import type { themeColorsType } from "../types";
 import { useAppStoreHook } from "@/store/modules/app";
-import { useGlobal, storageLocal } from "@pureadmin/utils";
 import { useEpThemeStoreHook } from "@/store/modules/epTheme";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
-import {
-  darken,
-  lighten,
-  toggleTheme
-} from "@pureadmin/theme/dist/browser-utils";
+import { darken, lighten, useGlobal, storageLocal } from "@pureadmin/utils";
 
 export function useDataThemeChange() {
   const { layoutTheme, layout } = useLayout();
@@ -38,7 +33,7 @@ export function useDataThemeChange() {
 
   const { $storage } = useGlobal<GlobalPropertiesApi>();
   const dataTheme = ref<boolean>($storage?.layout?.darkMode);
-  const overallStyle = ref<string>($storage?.layout?.overallStyle);
+  const themeMode = ref<string>($storage?.layout?.themeMode);
   const body = document.documentElement as HTMLElement;
 
   function toggleClass(flag: boolean, clsName: string, target?: HTMLElement) {
@@ -54,9 +49,7 @@ export function useDataThemeChange() {
     isClick = true
   ) {
     layoutTheme.value.theme = theme;
-    toggleTheme({
-      scopeName: `layout-theme-${theme}`
-    });
+    document.documentElement.setAttribute("data-theme", theme);
     // 如果非isClick，保留之前的themeColor
     const storageThemeColor = $storage.layout.themeColor;
     $storage.layout = {
@@ -66,7 +59,7 @@ export function useDataThemeChange() {
       sidebarStatus: $storage.layout?.sidebarStatus,
       epThemeColor: $storage.layout?.epThemeColor,
       themeColor: isClick ? theme : storageThemeColor,
-      overallStyle: overallStyle.value
+      themeMode: themeMode.value
     };
 
     if (theme === "default" || theme === "light") {
@@ -96,9 +89,9 @@ export function useDataThemeChange() {
     }
   };
 
-  /** 浅色、深色整体风格切换 */
-  function dataThemeChange(overall?: string) {
-    overallStyle.value = overall;
+  /** 浅色、深色主题模式切换 */
+  function dataThemeChange(mode?: string) {
+    themeMode.value = mode;
     if (useEpThemeStoreHook().epTheme === "light" && dataTheme.value) {
       setLayoutThemeColor("default", false);
     } else {
@@ -133,7 +126,7 @@ export function useDataThemeChange() {
   return {
     body,
     dataTheme,
-    overallStyle,
+    themeMode,
     layoutTheme,
     themeColors,
     onReset,
